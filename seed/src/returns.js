@@ -15,11 +15,13 @@ function openReturn(order, lines) {
     throw new Error('a return must cover at least one line');
   }
 
-  const deliveredDate = new Date(order.deliveredAt);
-  const now = new Date();
-  const daysDiff = (now - deliveredDate) / (1000 * 60 * 60 * 24);
-  if (Math.floor(daysDiff) > 30) {
-    throw new Error('return requested outside the 30-day window');
+  if (order.deliveredAt) {
+    const deliveredDate = new Date(order.deliveredAt);
+    const now = new Date();
+    const daysDiff = (now - deliveredDate) / (1000 * 60 * 60 * 24);
+    if (Math.floor(daysDiff) > 30) {
+      throw new Error('return requested outside the 30-day window');
+    }
   }
 
   return {
