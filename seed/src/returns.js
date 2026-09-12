@@ -15,18 +15,28 @@ function openReturn(order, lines) {
     throw new Error('a return must cover at least one line');
   }
 
+  // Keep both guards after merge: clearance (ODK-141) and window (ODK-152)
+  // are independent rules; dropping either would break the other story's AC.
+  if (lines.every((line) => line.finalClearance)) {
+    throw new Error('final-clearance items cannot be returned');
+  }
+
+  const returnableLines = lines.filter((line) => !line.finalClearance);
+
+  // No deliveredAt: window has not started, so the return is allowed.
   if (order.deliveredAt) {
-    const deliveredDate = new Date(order.deliveredAt);
-    const now = new Date();
-    const daysDiff = (now - deliveredDate) / (1000 * 60 * 60 * 24);
-    if (Math.floor(daysDiff) > 30) {
-      throw new Error('return requested outside the 30-day window');
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysSinceDelivery = Math.floor(
+      (Date.now() - new Date(order.deliveredAt).getTime()) / msPerDay
+    );
+    if (daysSinceDelivery > 30) {
+      throw new Error('returns must be opened within 30 days of delivery');
     }
   }
 
   return {
     orderId: order.id,
-    lines,
+    lines: returnableLines,
     raisedAt: new Date().toISOString(),
     approvedBy: null,
     approvedAt: null,
