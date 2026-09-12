@@ -15,6 +15,10 @@ function openReturn(order, lines) {
     throw new Error('a return must cover at least one line');
   }
 
+  if (lines.every((line) => line.finalClearance)) {
+    throw new Error('final-clearance items cannot be returned');
+  }
+
   return {
     orderId: order.id,
     lines,
